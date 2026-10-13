@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ace — AI Pickleball Gameplay Intelligence</title>
+<style>
+/* ============================================================
+   ACE — AI Pickleball Analytics
+   Design tokens grounded in the sport itself: the court's own
+   blue-play-area / green-out-of-bounds palette, a sky-to-court
+   gradient, and a cloud-band motif borrowed from the reference
+   collage, reinterpreted around a motion-tracked player.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Poppins:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+:root{
+  /* --- color tokens --- */
+  --sky-top:      #6FA8D8;
+  --sky-mid:      #4A86C8;
+  --court-blue:   #2E5FA3;
+  --court-blue-deep: #17335C;
+  --court-green:  #3C8654;
+  --court-green-deep: #245334;
+  --sunlight:     #D8E85B;
+  --sunlight-soft:#EAF29B;
+  --chalk:        #F7F5EF;
+  --cloud:        #EDEFE4;
+  --ink:          #14203A;
+  --ink-soft:     #4A5670;
+  --line:         rgba(20,32,58,0.10);
+
+  /* --- type tokens --- */
+  --font-script: 'Dancing Script', cursive;
+  --font-display:'Playfair Display', serif;
+  --font-body:   'Poppins', sans-serif;
+  --font-mono:   'Space Mono', monospace;
+
+  --radius-sm: 10px;
+  --radius-md: 18px;
+  --radius-lg: 28px;
+  --shadow-soft: 0 20px 60px -20px rgba(20,32,58,0.25);
+  --shadow-card: 0 10px 30px -12px rgba(20,32,58,0.18);
+}
+
+*{ box-sizing:border-box; }
+html{ scroll-behavior:smooth; }
+body{
+  margin:0;
+  font-family:var(--font-body);
+  color:var(--ink);
+  background:var(--chalk);
+  -webkit-font-smoothing:antialiased;
+}
+img,svg{ display:block; max-width:100%; }
+a{ color:inherit; text-decoration:none; }
+button{ font-family:inherit; cursor:pointer; }
+ul{ margin:0; padding:0; list-style:none; }
+h1,h2,h3,h4{ font-family:var(--font-display); margin:0; line-height:1.15; font-weight:600; }
+p{ margin:0; }
+
+:focus-visible{
+  outline:3px solid var(--sunlight);
+  outline-offset:3px;
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important; }
+}
+
+.eyebrow{
+  font-family:var(--font-mono);
+  font-size:0.72rem;
+  letter-spacing:0.16em;
+  text-transform:uppercase;
+  color:var(--court-blue);
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+.eyebrow::before{
+  content:"";
+  width:16px; height:2px;
+  background:var(--sunlight);
+  display:inline-block;
+}
+
+.wrap{
+  max-width:1200px;
+  margin:0 auto;
+  padding:0 32px;
+}
+
+/* ---------------- NAV ---------------- */
+.site-nav{
+  position:sticky; top:0; z-index:200;
+  background:rgba(247,245,239,0.86);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);
+}
+.nav-inner{
+  max-width:1200px; margin:0 auto; padding:14px 32px;
+  display:flex; align-items:center; justify-content:space-between; gap:24px;
+}
+.brand{
+  font-family:var(--font-script);
+  font-size:2rem;
+  font-weight:700;
+  background:linear-gradient(100deg, var(--court-blue) 10%, var(--court-green) 55%, var(--sunlight) 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  letter-spacing:0.5px;
+}
+.nav-links{
+  display:flex; align-items:center; gap:4px; flex-wrap:wrap;
+}
+.nav-links a{
+  font-size:0.86rem; font-weight:500; padding:9px 14px; border-radius:999px;
+  color:var(--ink-soft); transition:background .18s ease, color .18s ease;
+  display:inline-flex; align-items:center; gap:6px;
+}
+.nav-links a:hover{ background:var(--cloud); color:var(--ink); }
+.nav-links a.active{ background:var(--court-blue); color:#fff; }
+.nav-cta{ display:flex; align-items:center; gap:10px; }
+.nav-user{
+  font-family:var(--font-mono); font-size:0.75rem; color:var(--ink-soft);
+  display:none; align-items:center; gap:8px; padding:6px 12px; border:1px solid var(--line); border-radius:999px;
+}
+.nav-toggle{
+  display:none; flex-direction:column; gap:5px; background:none; border:none; padding:6px;
+}
+.nav-toggle span{ width:22px; height:2px; background:var(--ink); display:block; }
+
+/* ---------------- BUTTONS ---------------- */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  font-weight:600; font-size:0.92rem; padding:13px 26px; border-radius:999px;
+  border:1px solid transparent; transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
+  white-space:nowrap;
+}
+.btn:active{ transform:scale(0.97); }
+.btn-primary{
+  background:linear-gradient(120deg, var(--court-blue), var(--court-green));
+  color:#fff; box-shadow:0 10px 24px -8px rgba(46,95,163,0.55);
+}
+.btn-primary:hover{ box-shadow:0 14px 30px -8px rgba(46,95,163,0.7); transform:translateY(-1px); }
+.btn-sun{
+  background:var(--sunlight); color:var(--court-blue-deep);
+  box-shadow:0 10px 24px -10px rgba(216,232,91,0.8);
+}
+.btn-sun:hover{ transform:translateY(-1px); box-shadow:0 14px 28px -10px rgba(216,232,91,0.95); }
+.btn-ghost{
+  background:transparent; border-color:var(--line); color:var(--ink);
+}
+.btn-ghost:hover{ background:var(--cloud); }
+.btn-outline-light{
+  background:rgba(255,255,255,0.12); border-color:rgba(255,255,255,0.5); color:#fff;
+}
+.btn-outline-light:hover{ background:rgba(255,255,255,0.22); }
+.btn-block{ width:100%; }
+.btn-sm{ padding:8px 16px; font-size:0.8rem; }
+.btn[disabled]{ opacity:0.5; cursor:not-allowed; transform:none !important; }
+
+/* ---------------- CLOUD DIVIDER ---------------- */
+.cloud-divider{ display:block; width:100%; line-height:0; }
+.cloud-divider svg{ width:100%; height:auto; display:block; }
+
+/* ---------------- CARDS / PANELS ---------------- */
+.panel{
+  background:#fff; border:1px solid var(--line); border-radius:var(--radius-md);
+  box-shadow:var(--shadow-card);
+}
+.stat-card{
+  background:#fff; border:1px solid var(--line); border-radius:var(--radius-md);
+  padding:22px 24px; box-shadow:var(--shadow-card);
+}
+.stat-card .label{
+  font-family:var(--font-mono); font-size:0.68rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-soft);
+}
+.stat-card .value{
+  font-family:var(--font-display); font-size:2.1rem; font-weight:700; margin-top:6px; color:var(--court-blue-deep);
+}
+.stat-card .delta{ font-family:var(--font-mono); font-size:0.75rem; margin-top:4px; }
+.delta.up{ color:var(--court-green-deep); }
+.delta.down{ color:#a3413a; }
+
+/* ---------------- FOOTER ---------------- */
+.site-footer{
+  background:var(--court-blue-deep); color:rgba(255,255,255,0.82);
+  padding:56px 0 28px; margin-top:100px;
+}
+.footer-grid{
+  display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:32px;
+}
+.footer-brand{
+  font-family:var(--font-script); font-size:2.1rem; color:var(--sunlight);
+}
+.footer-grid h4{ font-family:var(--font-mono); font-size:0.72rem; letter-spacing:0.12em; text-transform:uppercase; color:rgba(255,255,255,0.55); margin-bottom:14px; font-weight:600;}
+.footer-grid a{ display:block; font-size:0.88rem; padding:6px 0; color:rgba(255,255,255,0.85); }
+.footer-grid a:hover{ color:var(--sunlight); }
+.footer-bottom{
+  border-top:1px solid rgba(255,255,255,0.14); margin-top:40px; padding-top:20px;
+  display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; color:rgba(255,255,255,0.5);
+  font-family:var(--font-mono);
+}
+
+/* ---------------- PAGE HERO (inner pages) ---------------- */
+.page-hero{
+  background:linear-gradient(160deg, var(--court-blue-deep), var(--court-blue) 60%, var(--court-green) 130%);
+  color:#fff; padding:64px 0 46px;
+}
+.page-hero .eyebrow{ color:var(--sunlight-soft); }
+.page-hero .eyebrow::before{ background:var(--sunlight); }
+.page-hero h1{ color:#fff; font-size:clamp(2rem, 4vw, 2.8rem); margin-top:10px; }
+.page-hero p{ color:rgba(255,255,255,0.82); max-width:620px; margin-top:14px; font-size:1.02rem; line-height:1.6; }
+
+.section{ padding:64px 0; }
+.section-head{ margin-bottom:34px; max-width:640px; }
+.section-head h2{ font-size:clamp(1.5rem,3vw,2.1rem); margin-top:10px; }
+.section-head p{ color:var(--ink-soft); margin-top:12px; line-height:1.6; }
+
+/* ---------------- FORM ELEMENTS ---------------- */
+.field{ margin-bottom:18px; }
+.field label{
+  display:block; font-family:var(--font-mono); font-size:0.72rem; letter-spacing:0.08em;
+  text-transform:uppercase; color:var(--ink-soft); margin-bottom:8px;
+}
+.field input, .field select, .field textarea{
+  width:100%; padding:13px 16px; border-radius:var(--radius-sm); border:1.5px solid var(--line);
+  font-family:var(--font-body); font-size:0.95rem; background:#fff; color:var(--ink);
+  transition:border-color .15s ease, box-shadow .15s ease;
+}
+.field input:focus, .field select:focus, .field textarea:focus{
+  border-color:var(--court-blue); box-shadow:0 0 0 4px rgba(46,95,163,0.12); outline:none;
+}
+.field-error{ font-size:0.78rem; color:#b1453d; margin-top:6px; display:none; font-family:var(--font-mono); }
+.field.invalid input{ border-color:#b1453d; }
+.field.invalid .field-error{ display:block; }
+.password-wrap{ position:relative; }
+.password-toggle{
+  position:absolute; right:12px; top:50%; transform:translateY(-50%);
+  background:none; border:none; font-family:var(--font-mono); font-size:0.7rem; color:var(--ink-soft);
+  letter-spacing:0.05em; text-transform:uppercase;
+}
+.password-toggle:hover{ color:var(--court-blue); }
+.strength-meter{ height:4px; border-radius:4px; background:var(--line); margin-top:8px; overflow:hidden; }
+.strength-meter span{ display:block; height:100%; width:0%; background:#b1453d; transition:width .2s ease, background .2s ease; }
+
+.method-switch{
+  display:flex; background:var(--cloud); border-radius:999px; padding:4px; margin-bottom:22px;
+}
+.method-switch button{
+  flex:1; border:none; background:none; padding:10px; border-radius:999px; font-size:0.85rem; font-weight:600; color:var(--ink-soft);
+  transition:background .18s ease, color .18s ease;
+}
+.method-switch button.active{ background:#fff; color:var(--court-blue-deep); box-shadow:var(--shadow-card); }
+
+.checkbox-row{ display:flex; align-items:center; gap:8px; font-size:0.84rem; color:var(--ink-soft); }
+
+/* ---------------- SKELETON / MOTION FIGURE ---------------- */
+.motion-figure line, .motion-figure circle{
+  stroke:var(--sunlight); stroke-width:2.4; fill:none; stroke-linecap:round;
+}
+.motion-figure circle{ fill:var(--sunlight); stroke:none; }
+.motion-trail{ stroke:rgba(216,232,91,0.55); stroke-width:2; fill:none; stroke-dasharray:6 8; }
+
+/* ---------------- UTILS ---------------- */
+.grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:28px; }
+.grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+.grid-4{ display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
+.tag{
+  font-family:var(--font-mono); font-size:0.68rem; letter-spacing:0.08em; text-transform:uppercase;
+  padding:5px 10px; border-radius:999px; background:var(--cloud); color:var(--ink-soft); display:inline-block;
+}
+.tag.blue{ background:rgba(46,95,163,0.12); color:var(--court-blue); }
+.tag.green{ background:rgba(60,134,84,0.12); color:var(--court-green-deep); }
+.tag.sun{ background:rgba(216,232,91,0.28); color:#6b6f1a; }
+.divider-line{ height:1px; background:var(--line); border:none; margin:0; }
+
+.auth-shell{
+  min-height:calc(100vh - 72px);
+  display:grid; grid-template-columns:1fr 1fr;
+}
+.auth-visual{
+  background:linear-gradient(165deg, var(--sky-top), var(--court-blue) 55%, var(--court-green) 130%);
+  position:relative; overflow:hidden; display:flex; align-items:flex-end; padding:48px;
+}
+.auth-visual .quote{ color:#fff; position:relative; z-index:2; }
+.auth-visual .quote .script{ font-family:var(--font-script); font-size:2.4rem; color:var(--sunlight-soft); display:block; }
+.auth-form-side{ display:flex; align-items:center; justify-content:center; padding:48px 32px; }
+.auth-card{ width:100%; max-width:420px; }
+
+/* ---------------- RESPONSIVE ---------------- */
+@media (max-width: 980px){
+  .grid-2{ grid-template-columns:1fr; }
+  .grid-3{ grid-template-columns:1fr 1fr; }
+  .grid-4{ grid-template-columns:1fr 1fr; }
+  .footer-grid{ grid-template-columns:1fr 1fr; }
+  .auth-shell{ grid-template-columns:1fr; }
+  .auth-visual{ display:none; }
+}
+@media (max-width: 760px){
+  .nav-links{
+    position:absolute; top:100%; left:0; right:0; background:var(--chalk); border-bottom:1px solid var(--line);
+    flex-direction:column; align-items:stretch; padding:10px 20px 18px; display:none; gap:2px;
+  }
+  .nav-links.open{ display:flex; }
+  .nav-toggle{ display:flex; }
+  .nav-cta .btn-ghost{ display:none; }
+  .grid-3{ grid-template-columns:1fr; }
+  .grid-4{ grid-template-columns:1fr 1fr; }
+  .wrap{ padding:0 20px; }
+}
+
+</style>
+<style>
+  .hero{
+    position:relative; overflow:hidden;
+    background:linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 42%, var(--court-blue) 78%, var(--court-blue-deep) 100%);
+    padding-top:64px;
+  }
+  .hero-inner{
+    max-width:1200px; margin:0 auto; padding:56px 32px 0;
+    display:grid; grid-template-columns:1.05fr 0.95fr; gap:20px; align-items:center;
+    position:relative; z-index:2;
+  }
+  .hero-copy .eyebrow{ color:var(--sunlight-soft); }
+  .hero-copy .eyebrow::before{ background:var(--sunlight); }
+  .hero-word{
+    font-family:var(--font-script); font-weight:700;
+    font-size:clamp(4.2rem, 10vw, 7.5rem);
+    color:var(--sunlight); line-height:0.85; margin:14px 0 6px -6px;
+    text-shadow:0 8px 40px rgba(20,32,58,0.35);
+  }
+  .hero-copy h1{
+    color:#fff; font-size:clamp(1.5rem, 2.6vw, 2.1rem); font-weight:600; max-width:520px; margin-top:6px;
+  }
+  .hero-copy p{ color:rgba(255,255,255,0.85); max-width:480px; margin-top:18px; font-size:1.02rem; line-height:1.7; }
+  .hero-actions{ display:flex; gap:14px; margin-top:30px; flex-wrap:wrap; }
+  .hero-figure-wrap{ position:relative; height:420px; }
+  .hero-figure-wrap svg{ position:absolute; inset:0; width:100%; height:100%; }
+  .float-chip{
+    position:absolute; background:rgba(255,255,255,0.14); backdrop-filter:blur(10px);
+    border:1px solid rgba(255,255,255,0.35); border-radius:14px; padding:10px 14px;
+    font-family:var(--font-mono); font-size:0.72rem; color:#fff; animation:floaty 5s ease-in-out infinite;
+  }
+  .float-chip.c1{ top:8%; left:2%; animation-delay:0s; }
+  .float-chip.c2{ top:48%; right:0%; animation-delay:1.2s; }
+  .float-chip.c3{ bottom:6%; left:14%; animation-delay:2.1s; }
+  @keyframes floaty{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-10px);} }
+
+  .cloud-band{ position:relative; z-index:2; margin-top:36px; }
+
+  .stats-strip{
+    background:var(--court-blue-deep); padding:26px 0; position:relative; z-index:2;
+  }
+  .stats-strip .wrap{ display:grid; grid-template-columns:repeat(4,1fr); gap:20px; text-align:center; }
+  .stats-strip .num{ font-family:var(--font-display); font-size:2.1rem; color:var(--sunlight); font-weight:700; }
+  .stats-strip .lab{ font-family:var(--font-mono); font-size:0.68rem; letter-spacing:0.08em; text-transform:uppercase; color:rgba(255,255,255,0.65); margin-top:4px; }
+
+  .feature-card{
+    padding:28px; border-radius:var(--radius-md); background:#fff; border:1px solid var(--line); box-shadow:var(--shadow-card);
+    transition:transform .2s ease, box-shadow .2s ease;
+  }
+  .feature-card:hover{ transform:translateY(-4px); box-shadow:var(--shadow-soft); }
+  .feature-card .icon{
+    width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg, var(--court-blue), var(--court-green)); font-size:1.3rem; margin-bottom:16px;
+  }
+  .feature-card h3{ font-size:1.08rem; }
+  .feature-card p{ margin-top:8px; color:var(--ink-soft); font-size:0.9rem; line-height:1.6; }
+
+  .demo-preview{
+    background:var(--ink); border-radius:var(--radius-lg); overflow:hidden; position:relative;
+    box-shadow:var(--shadow-soft);
+  }
+  .demo-preview .bar{ display:flex; gap:6px; padding:14px 18px; background:#0e1524; }
+  .demo-preview .bar span{ width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,0.25); }
+  .demo-court{ position:relative; aspect-ratio:16/8; background:linear-gradient(135deg, var(--court-blue), var(--court-blue-deep)); }
+  .demo-court .zone{ position:absolute; inset:12% 8%; border:2px solid rgba(255,255,255,0.35); border-radius:6px; }
+  .demo-court .zone::after{ content:""; position:absolute; left:50%; top:0; bottom:0; width:2px; background:rgba(255,255,255,0.35); }
+  .demo-dot{ position:absolute; width:14px; height:14px; border-radius:50%; box-shadow:0 0 0 6px rgba(255,255,255,0.08); }
+  .demo-dot.p1{ background:var(--sunlight); top:30%; left:26%; }
+  .demo-dot.p2{ background:#fff; top:64%; right:20%; }
+  .demo-ball{ position:absolute; width:8px; height:8px; border-radius:50%; background:#fff; top:44%; left:52%; box-shadow:0 0 12px 2px rgba(255,255,255,0.8); }
+  .demo-trace{ position:absolute; inset:0; }
+
+  .testimonial-card{
+    background:var(--cloud); border-radius:var(--radius-md); padding:26px; border:1px solid var(--line);
+  }
+  .testimonial-card p{ font-family:var(--font-display); font-style:italic; font-size:1.05rem; line-height:1.6; color:var(--ink); }
+  .testimonial-card .who{ margin-top:16px; font-family:var(--font-mono); font-size:0.75rem; color:var(--ink-soft); }
+
+  .cta-band{
+    background:linear-gradient(120deg, var(--court-green-deep), var(--court-blue-deep));
+    border-radius:var(--radius-lg); padding:56px; text-align:center; color:#fff; position:relative; overflow:hidden;
+  }
+  .cta-band .hero-word-sm{ font-family:var(--font-script); color:var(--sunlight); font-size:2.4rem; display:block; margin-bottom:6px;}
+  .cta-band h2{ color:#fff; font-size:clamp(1.5rem,3vw,2.2rem); }
+  .cta-band p{ color:rgba(255,255,255,0.82); max-width:520px; margin:14px auto 26px; }
+
+  @media (max-width: 980px){
+    .hero-inner{ grid-template-columns:1fr; }
+    .hero-figure-wrap{ height:280px; }
+    .stats-strip .wrap{ grid-template-columns:1fr 1fr; }
+  }
+</style>
+</head>
+<body data-page="index">
+
+<nav class="site-nav" id="ace-nav"></nav>
+
+<!-- ============ HERO ============ -->
+<header class="hero">
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <span class="eyebrow">Computer Vision · Deep Learning · Physics-Based Motion Modeling</span>
+      <div class="hero-word">Ace</div>
+      <h1>AI-powered pickleball gameplay tracking &amp; biomechanical analysis.</h1>
+      <p>Upload a match and Ace tracks every player and ball position, classifies each stroke, models the physics of the rally, and coaches you like a strategist watching from the sideline.</p>
+      <div class="hero-actions">
+        <a href="upload.html" class="btn btn-sun">Upload a match</a>
+        <a href="dashboard.html" class="btn btn-outline-light">See a live dashboard</a>
+      </div>
+    </div>
+
+    <div class="hero-figure-wrap" aria-hidden="true">
+      <div class="float-chip c1">● tracking player 1</div>
+      <div class="float-chip c2">↗ shot: topspin drive</div>
+      <div class="float-chip c3">◆ contact confidence 96%</div>
+      <svg viewBox="0 0 400 420" class="motion-figure">
+        <!-- motion trail of the swing -->
+        <path class="motion-trail" d="M 90 300 Q 160 210 260 150" />
+        <!-- pose skeleton: player mid forehand swing, echoing the collage's airborne figure -->
+        <circle cx="210" cy="90" r="16" />
+        <line x1="210" y1="106" x2="205" y2="190" />
+        <line x1="205" y1="190" x2="170" y2="270" />
+        <line x1="205" y1="190" x2="240" y2="268" />
+        <line x1="170" y1="270" x2="150" y2="350" />
+        <line x1="240" y1="268" x2="260" y2="348" />
+        <line x1="207" y1="140" x2="130" y2="120" />
+        <line x1="207" y1="150" x2="272" y2="120" />
+        <line x1="272" y1="120" x2="300" y2="70" />
+        <circle cx="130" cy="120" r="5" />
+        <circle cx="300" cy="70" r="5" />
+        <circle cx="150" cy="350" r="5" />
+        <circle cx="260" cy="348" r="5" />
+      </svg>
+    </div>
+  </div>
+
+  <!-- cloud divider, echoing the reference collage's cloud band -->
+  <div class="cloud-band">
+    <div class="cloud-divider">
+      <svg viewBox="0 0 1440 140" preserveAspectRatio="none">
+        <path fill="#F7F5EF" d="M0,90 C120,40 220,120 340,80 C460,40 540,120 660,90 C780,60 860,130 1000,90 C1140,50 1260,120 1440,80 L1440,140 L0,140 Z"/>
+        <path fill="#F7F5EF" opacity="0.55" d="M0,110 C150,70 260,130 400,100 C540,70 620,130 760,100 C900,70 1000,130 1160,100 C1300,75 1380,120 1440,105 L1440,140 L0,140 Z"/>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<!-- ============ STAT STRIP ============ -->
+<section class="stats-strip">
+  <div class="wrap">
+    <div><div class="num">98.2%</div><div class="lab">Ball detection accuracy</div></div>
+    <div><div class="num">11</div><div class="lab">Stroke classes modeled</div></div>
+    <div><div class="num">30fps</div><div class="lab">Pose tracking rate</div></div>
+    <div><div class="num">0.4s</div><div class="lab">Avg. reaction resolution</div></div>
+  </div>
+</section>
+
+<!-- ============ INTRO ============ -->
+<section class="section">
+  <div class="wrap section-head">
+    <span class="eyebrow">What Ace does</span>
+    <h2>A sideline coach built from video, not guesswork.</h2>
+    <p>Ace combines player and ball detection, pose estimation, and a physics-based motion model to reconstruct a full pickleball rally — then explains it in plain language, the way a coach would after reviewing tape.</p>
+  </div>
+  <div class="wrap grid-3">
+    <div class="feature-card">
+      <div class="icon">🎾</div>
+      <h3>Gameplay Tracking</h3>
+      <p>Detects both players and the ball frame-by-frame, reconstructing full court positioning and rally sequences.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🦴</div>
+      <h3>Biomechanical Analysis</h3>
+      <p>Pose estimation measures joint angles, swing paths, and reaction timing to surface real technique data.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🏓</div>
+      <h3>Stroke Classification</h3>
+      <p>A deep learning classifier labels every contact — dink, drive, volley, third-shot drop, smash — automatically.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🧭</div>
+      <h3>Tactical Strategy Evaluation</h3>
+      <p>Shot selection and court coverage are scored against rally outcomes to reveal patterns that win points.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">📐</div>
+      <h3>Physics-Based Motion Modeling</h3>
+      <p>Ball trajectory, spin, and speed are reconstructed with a physics engine, not just pixel tracking.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🤖</div>
+      <h3>Intelligent Coaching</h3>
+      <p>Findings are translated into specific, prioritized recommendations — not just a wall of numbers.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DEMO PREVIEW ============ -->
+<section class="section" style="padding-top:0;">
+  <div class="wrap grid-2" style="align-items:center;">
+    <div>
+      <span class="eyebrow">Demo preview</span>
+      <h2 style="margin-top:10px; font-size:clamp(1.4rem,2.6vw,1.9rem);">Watch tracking happen live over the court.</h2>
+      <p style="margin-top:14px; color:var(--ink-soft); line-height:1.7;">Every frame is processed for player bounding boxes, ball position, and court geometry. The overlay you see here is the same one rendered on your own uploaded footage in Match Playback.</p>
+      <a href="playback.html" class="btn btn-primary" style="margin-top:22px;">Open match playback</a>
+    </div>
+    <div class="demo-preview">
+      <div class="bar"><span></span><span></span><span></span></div>
+      <div class="demo-court">
+        <div class="zone"></div>
+        <div class="demo-dot p1"></div>
+        <div class="demo-dot p2"></div>
+        <div class="demo-ball"></div>
+        <svg class="demo-trace" viewBox="0 0 100 50" preserveAspectRatio="none">
+          <path d="M26 15 Q 45 5 52 22 Q 60 38 80 32" stroke="rgba(255,255,255,0.5)" stroke-width="0.6" fill="none" stroke-dasharray="1.5 2"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TESTIMONIALS ============ -->
+<section class="section" style="background:var(--cloud); padding-top:64px; padding-bottom:64px;">
+  <div class="wrap section-head">
+    <span class="eyebrow">Early feedback</span>
+    <h2>From playtesters &amp; reviewers</h2>
+  </div>
+  <div class="wrap grid-3">
+    <div class="testimonial-card">
+      <p>"The stroke classifier caught a drop-shot habit my own coach hadn't flagged after a season of lessons."</p>
+      <div class="who">— Club-level 4.5 player, playtester</div>
+    </div>
+    <div class="testimonial-card">
+      <p>"Genuinely reads like a sports-science tool, not a student project. The physics layer is the differentiator."</p>
+      <div class="who">— Hackathon judge</div>
+    </div>
+    <div class="testimonial-card">
+      <p>"Court coverage heatmaps made a two-hour match legible in under a minute."</p>
+      <div class="who">— Recreational league captain</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA ============ -->
+<section class="section">
+  <div class="wrap">
+    <div class="cta-band">
+      <span class="hero-word-sm">Ready when you are</span>
+      <h2>Upload your first match and see Ace work.</h2>
+      <p>No equipment beyond a phone camera. Ace handles detection, tracking, classification, and coaching from a single video file.</p>
+      <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
+        <a href="signup.html" class="btn btn-sun">Create a free account</a>
+        <a href="upload.html" class="btn btn-outline-light">Try without signing in</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer" id="ace-footer"></footer>
+
+<script>
+/* ============================================================
+   ACE — shared site behaviour
+   - injects nav + footer on every page (single source of truth)
+   - lightweight mock-auth using localStorage (front-end only demo)
+   - mobile nav toggle
+   ============================================================ */
+
+const ACE_NAV_LINKS = [
+  { href: "index.html",     label: "🏠 Home" },
+  { href: "upload.html",    label: "📂 Upload" },
+  { href: "playback.html",  label: "📹 Playback" },
+  { href: "dashboard.html", label: "📊 Dashboard" },
+  { href: "player.html",    label: "🎯 Players" },
+  { href: "insights.html",  label: "🤖 Insights" },
+  { href: "report.html",    label: "📄 Report" },
+];
+
+function aceCurrentUser(){
+  try{ return JSON.parse(localStorage.getItem("ace_current_user") || "null"); }
+  catch(e){ return null; }
+}
+
+function aceRenderNav(){
+  const mount = document.getElementById("ace-nav");
+  if(!mount) return;
+  const here = (document.body.getAttribute("data-page") || "");
+  const user = aceCurrentUser();
+
+  const links = ACE_NAV_LINKS.map(l => {
+    const active = l.href.replace(".html","") === here ? " active" : "";
+    return `<a href="${l.href}" class="${active.trim()}">${l.label}</a>`;
+  }).join("");
+
+  const ctaHtml = user
+    ? `<span class="nav-user" style="display:inline-flex"><span>👋 ${user.name.split(" ")[0]}</span></span>
+       <button class="btn btn-ghost btn-sm" id="ace-logout-btn">Sign out</button>`
+    : `<a href="signin.html" class="btn btn-ghost btn-sm">Sign in</a>
+       <a href="signup.html" class="btn btn-primary btn-sm">Get started</a>`;
+
+  mount.innerHTML = `
+    <div class="nav-inner">
+      <a href="index.html" class="brand">Ace</a>
+      <button class="nav-toggle" id="ace-nav-toggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="nav-links" id="ace-nav-links">${links}</div>
+      <div class="nav-cta">${ctaHtml}</div>
+    </div>
+  `;
+
+  document.getElementById("ace-nav-toggle").addEventListener("click", () => {
+    document.getElementById("ace-nav-links").classList.toggle("open");
+  });
+
+  const logoutBtn = document.getElementById("ace-logout-btn");
+  if(logoutBtn){
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("ace_current_user");
+      window.location.href = "index.html";
+    });
+  }
+}
+
+function aceRenderFooter(){
+  const mount = document.getElementById("ace-footer");
+  if(!mount) return;
+  mount.innerHTML = `
+    <div class="wrap footer-grid">
+      <div>
+        <div class="footer-brand">Ace</div>
+        <p style="margin-top:14px; font-size:0.88rem; line-height:1.7; color:rgba(255,255,255,0.65); max-width:280px;">
+          Computer vision, biomechanics and physics-based motion modeling for pickleball —
+          built as a research-grade coaching engine.
+        </p>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <a href="upload.html">Upload Analysis</a>
+        <a href="playback.html">Match Playback</a>
+        <a href="dashboard.html">Analytics Dashboard</a>
+        <a href="insights.html">AI Insights</a>
+      </div>
+      <div>
+        <h4>Account</h4>
+        <a href="player.html">Player Performance</a>
+        <a href="report.html">Reports</a>
+        <a href="signin.html">Sign in</a>
+        <a href="signup.html">Create account</a>
+      </div>
+      <div>
+        <h4>Research</h4>
+        <a href="#">Pose Estimation Model</a>
+        <a href="#">Stroke Classifier</a>
+        <a href="#">Physics Engine</a>
+        <a href="#">Publications</a>
+      </div>
+    </div>
+    <div class="wrap footer-bottom">
+      <span>© 2026 Ace Pickleball Intelligence — student research build</span>
+      <span>Built with computer vision + deep learning</span>
+    </div>
+  `;
+}
+
+function aceGuardPage(){
+  // pages that require a signed-in session for the "real product" feel
+  const guarded = ["dashboard","player","upload","playback","insights","report"];
+  const page = document.body.getAttribute("data-page");
+  if(guarded.includes(page) && !aceCurrentUser()){
+    const banner = document.createElement("div");
+    banner.style.cssText = "background:#fff4d6;border-bottom:1px solid #eadfa9;color:#6b5a1a;font-family:var(--font-mono);font-size:0.8rem;text-align:center;padding:10px 16px;";
+    banner.innerHTML = `You're viewing a demo session. <a href="signin.html" style="color:#2E5FA3;font-weight:700;">Sign in</a> to save real matches to your account.`;
+    document.body.insertBefore(banner, document.body.firstChild);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  aceRenderNav();
+  aceRenderFooter();
+  aceGuardPage();
+});
+
+</script>
+</body>
+</html>

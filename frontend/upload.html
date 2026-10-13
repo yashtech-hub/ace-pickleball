@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Upload Analysis — Ace</title>
+<style>
+/* ============================================================
+   ACE — AI Pickleball Analytics
+   Design tokens grounded in the sport itself: the court's own
+   blue-play-area / green-out-of-bounds palette, a sky-to-court
+   gradient, and a cloud-band motif borrowed from the reference
+   collage, reinterpreted around a motion-tracked player.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Poppins:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+:root{
+  /* --- color tokens --- */
+  --sky-top:      #6FA8D8;
+  --sky-mid:      #4A86C8;
+  --court-blue:   #2E5FA3;
+  --court-blue-deep: #17335C;
+  --court-green:  #3C8654;
+  --court-green-deep: #245334;
+  --sunlight:     #D8E85B;
+  --sunlight-soft:#EAF29B;
+  --chalk:        #F7F5EF;
+  --cloud:        #EDEFE4;
+  --ink:          #14203A;
+  --ink-soft:     #4A5670;
+  --line:         rgba(20,32,58,0.10);
+
+  /* --- type tokens --- */
+  --font-script: 'Dancing Script', cursive;
+  --font-display:'Playfair Display', serif;
+  --font-body:   'Poppins', sans-serif;
+  --font-mono:   'Space Mono', monospace;
+
+  --radius-sm: 10px;
+  --radius-md: 18px;
+  --radius-lg: 28px;
+  --shadow-soft: 0 20px 60px -20px rgba(20,32,58,0.25);
+  --shadow-card: 0 10px 30px -12px rgba(20,32,58,0.18);
+}
+
+*{ box-sizing:border-box; }
+html{ scroll-behavior:smooth; }
+body{
+  margin:0;
+  font-family:var(--font-body);
+  color:var(--ink);
+  background:var(--chalk);
+  -webkit-font-smoothing:antialiased;
+}
+img,svg{ display:block; max-width:100%; }
+a{ color:inherit; text-decoration:none; }
+button{ font-family:inherit; cursor:pointer; }
+ul{ margin:0; padding:0; list-style:none; }
+h1,h2,h3,h4{ font-family:var(--font-display); margin:0; line-height:1.15; font-weight:600; }
+p{ margin:0; }
+
+:focus-visible{
+  outline:3px solid var(--sunlight);
+  outline-offset:3px;
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important; }
+}
+
+.eyebrow{
+  font-family:var(--font-mono);
+  font-size:0.72rem;
+  letter-spacing:0.16em;
+  text-transform:uppercase;
+  color:var(--court-blue);
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+.eyebrow::before{
+  content:"";
+  width:16px; height:2px;
+  background:var(--sunlight);
+  display:inline-block;
+}
+
+.wrap{
+  max-width:1200px;
+  margin:0 auto;
+  padding:0 32px;
+}
+
+/* ---------------- NAV ---------------- */
+.site-nav{
+  position:sticky; top:0; z-index:200;
+  background:rgba(247,245,239,0.86);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);
+}
+.nav-inner{
+  max-width:1200px; margin:0 auto; padding:14px 32px;
+  display:flex; align-items:center; justify-content:space-between; gap:24px;
+}
+.brand{
+  font-family:var(--font-script);
+  font-size:2rem;
+  font-weight:700;
+  background:linear-gradient(100deg, var(--court-blue) 10%, var(--court-green) 55%, var(--sunlight) 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  letter-spacing:0.5px;
+}
+.nav-links{
+  display:flex; align-items:center; gap:4px; flex-wrap:wrap;
+}
+.nav-links a{
+  font-size:0.86rem; font-weight:500; padding:9px 14px; border-radius:999px;
+  color:var(--ink-soft); transition:background .18s ease, color .18s ease;
+  display:inline-flex; align-items:center; gap:6px;
+}
+.nav-links a:hover{ background:var(--cloud); color:var(--ink); }
+.nav-links a.active{ background:var(--court-blue); color:#fff; }
+.nav-cta{ display:flex; align-items:center; gap:10px; }
+.nav-user{
+  font-family:var(--font-mono); font-size:0.75rem; color:var(--ink-soft);
+  display:none; align-items:center; gap:8px; padding:6px 12px; border:1px solid var(--line); border-radius:999px;
+}
+.nav-toggle{
+  display:none; flex-direction:column; gap:5px; background:none; border:none; padding:6px;
+}
+.nav-toggle span{ width:22px; height:2px; background:var(--ink); display:block; }
+
+/* ---------------- BUTTONS ---------------- */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  font-weight:600; font-size:0.92rem; padding:13px 26px; border-radius:999px;
+  border:1px solid transparent; transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
+  white-space:nowrap;
+}
+.btn:active{ transform:scale(0.97); }
+.btn-primary{
+  background:linear-gradient(120deg, var(--court-blue), var(--court-green));
+  color:#fff; box-shadow:0 10px 24px -8px rgba(46,95,163,0.55);
+}
+.btn-primary:hover{ box-shadow:0 14px 30px -8px rgba(46,95,163,0.7); transform:translateY(-1px); }
+.btn-sun{
+  background:var(--sunlight); color:var(--court-blue-deep);
+  box-shadow:0 10px 24px -10px rgba(216,232,91,0.8);
+}
+.btn-sun:hover{ transform:translateY(-1px); box-shadow:0 14px 28px -10px rgba(216,232,91,0.95); }
+.btn-ghost{
+  background:transparent; border-color:var(--line); color:var(--ink);
+}
+.btn-ghost:hover{ background:var(--cloud); }
+.btn-outline-light{
+  background:rgba(255,255,255,0.12); border-color:rgba(255,255,255,0.5); color:#fff;
+}
+.btn-outline-light:hover{ background:rgba(255,255,255,0.22); }
+.btn-block{ width:100%; }
+.btn-sm{ padding:8px 16px; font-size:0.8rem; }
+.btn[disabled]{ opacity:0.5; cursor:not-allowed; transform:none !important; }
+
+/* ---------------- CLOUD DIVIDER ---------------- */
+.cloud-divider{ display:block; width:100%; line-height:0; }
+.cloud-divider svg{ width:100%; height:auto; display:block; }
+
+/* ---------------- CARDS / PANELS ---------------- */
+.panel{
+  background:#fff; border:1px solid var(--line); border-radius:var(--radius-md);
+  box-shadow:var(--shadow-card);
+}
+.stat-card{
+  background:#fff; border:1px solid var(--line); border-radius:var(--radius-md);
+  padding:22px 24px; box-shadow:var(--shadow-card);
+}
+.stat-card .label{
+  font-family:var(--font-mono); font-size:0.68rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-soft);
+}
+.stat-card .value{
+  font-family:var(--font-display); font-size:2.1rem; font-weight:700; margin-top:6px; color:var(--court-blue-deep);
+}
+.stat-card .delta{ font-family:var(--font-mono); font-size:0.75rem; margin-top:4px; }
+.delta.up{ color:var(--court-green-deep); }
+.delta.down{ color:#a3413a; }
+
+/* ---------------- FOOTER ---------------- */
+.site-footer{
+  background:var(--court-blue-deep); color:rgba(255,255,255,0.82);
+  padding:56px 0 28px; margin-top:100px;
+}
+.footer-grid{
+  display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:32px;
+}
+.footer-brand{
+  font-family:var(--font-script); font-size:2.1rem; color:var(--sunlight);
+}
+.footer-grid h4{ font-family:var(--font-mono); font-size:0.72rem; letter-spacing:0.12em; text-transform:uppercase; color:rgba(255,255,255,0.55); margin-bottom:14px; font-weight:600;}
+.footer-grid a{ display:block; font-size:0.88rem; padding:6px 0; color:rgba(255,255,255,0.85); }
+.footer-grid a:hover{ color:var(--sunlight); }
+.footer-bottom{
+  border-top:1px solid rgba(255,255,255,0.14); margin-top:40px; padding-top:20px;
+  display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; color:rgba(255,255,255,0.5);
+  font-family:var(--font-mono);
+}
+
+/* ---------------- PAGE HERO (inner pages) ---------------- */
+.page-hero{
+  background:linear-gradient(160deg, var(--court-blue-deep), var(--court-blue) 60%, var(--court-green) 130%);
+  color:#fff; padding:64px 0 46px;
+}
+.page-hero .eyebrow{ color:var(--sunlight-soft); }
+.page-hero .eyebrow::before{ background:var(--sunlight); }
+.page-hero h1{ color:#fff; font-size:clamp(2rem, 4vw, 2.8rem); margin-top:10px; }
+.page-hero p{ color:rgba(255,255,255,0.82); max-width:620px; margin-top:14px; font-size:1.02rem; line-height:1.6; }
+
+.section{ padding:64px 0; }
+.section-head{ margin-bottom:34px; max-width:640px; }
+.section-head h2{ font-size:clamp(1.5rem,3vw,2.1rem); margin-top:10px; }
+.section-head p{ color:var(--ink-soft); margin-top:12px; line-height:1.6; }
+
+/* ---------------- FORM ELEMENTS ---------------- */
+.field{ margin-bottom:18px; }
+.field label{
+  display:block; font-family:var(--font-mono); font-size:0.72rem; letter-spacing:0.08em;
+  text-transform:uppercase; color:var(--ink-soft); margin-bottom:8px;
+}
+.field input, .field select, .field textarea{
+  width:100%; padding:13px 16px; border-radius:var(--radius-sm); border:1.5px solid var(--line);
+  font-family:var(--font-body); font-size:0.95rem; background:#fff; color:var(--ink);
+  transition:border-color .15s ease, box-shadow .15s ease;
+}
+.field input:focus, .field select:focus, .field textarea:focus{
+  border-color:var(--court-blue); box-shadow:0 0 0 4px rgba(46,95,163,0.12); outline:none;
+}
+.field-error{ font-size:0.78rem; color:#b1453d; margin-top:6px; display:none; font-family:var(--font-mono); }
+.field.invalid input{ border-color:#b1453d; }
+.field.invalid .field-error{ display:block; }
+.password-wrap{ position:relative; }
+.password-toggle{
+  position:absolute; right:12px; top:50%; transform:translateY(-50%);
+  background:none; border:none; font-family:var(--font-mono); font-size:0.7rem; color:var(--ink-soft);
+  letter-spacing:0.05em; text-transform:uppercase;
+}
+.password-toggle:hover{ color:var(--court-blue); }
+.strength-meter{ height:4px; border-radius:4px; background:var(--line); margin-top:8px; overflow:hidden; }
+.strength-meter span{ display:block; height:100%; width:0%; background:#b1453d; transition:width .2s ease, background .2s ease; }
+
+.method-switch{
+  display:flex; background:var(--cloud); border-radius:999px; padding:4px; margin-bottom:22px;
+}
+.method-switch button{
+  flex:1; border:none; background:none; padding:10px; border-radius:999px; font-size:0.85rem; font-weight:600; color:var(--ink-soft);
+  transition:background .18s ease, color .18s ease;
+}
+.method-switch button.active{ background:#fff; color:var(--court-blue-deep); box-shadow:var(--shadow-card); }
+
+.checkbox-row{ display:flex; align-items:center; gap:8px; font-size:0.84rem; color:var(--ink-soft); }
+
+/* ---------------- SKELETON / MOTION FIGURE ---------------- */
+.motion-figure line, .motion-figure circle{
+  stroke:var(--sunlight); stroke-width:2.4; fill:none; stroke-linecap:round;
+}
+.motion-figure circle{ fill:var(--sunlight); stroke:none; }
+.motion-trail{ stroke:rgba(216,232,91,0.55); stroke-width:2; fill:none; stroke-dasharray:6 8; }
+
+/* ---------------- UTILS ---------------- */
+.grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:28px; }
+.grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+.grid-4{ display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
+.tag{
+  font-family:var(--font-mono); font-size:0.68rem; letter-spacing:0.08em; text-transform:uppercase;
+  padding:5px 10px; border-radius:999px; background:var(--cloud); color:var(--ink-soft); display:inline-block;
+}
+.tag.blue{ background:rgba(46,95,163,0.12); color:var(--court-blue); }
+.tag.green{ background:rgba(60,134,84,0.12); color:var(--court-green-deep); }
+.tag.sun{ background:rgba(216,232,91,0.28); color:#6b6f1a; }
+.divider-line{ height:1px; background:var(--line); border:none; margin:0; }
+
+.auth-shell{
+  min-height:calc(100vh - 72px);
+  display:grid; grid-template-columns:1fr 1fr;
+}
+.auth-visual{
+  background:linear-gradient(165deg, var(--sky-top), var(--court-blue) 55%, var(--court-green) 130%);
+  position:relative; overflow:hidden; display:flex; align-items:flex-end; padding:48px;
+}
+.auth-visual .quote{ color:#fff; position:relative; z-index:2; }
+.auth-visual .quote .script{ font-family:var(--font-script); font-size:2.4rem; color:var(--sunlight-soft); display:block; }
+.auth-form-side{ display:flex; align-items:center; justify-content:center; padding:48px 32px; }
+.auth-card{ width:100%; max-width:420px; }
+
+/* ---------------- RESPONSIVE ---------------- */
+@media (max-width: 980px){
+  .grid-2{ grid-template-columns:1fr; }
+  .grid-3{ grid-template-columns:1fr 1fr; }
+  .grid-4{ grid-template-columns:1fr 1fr; }
+  .footer-grid{ grid-template-columns:1fr 1fr; }
+  .auth-shell{ grid-template-columns:1fr; }
+  .auth-visual{ display:none; }
+}
+@media (max-width: 760px){
+  .nav-links{
+    position:absolute; top:100%; left:0; right:0; background:var(--chalk); border-bottom:1px solid var(--line);
+    flex-direction:column; align-items:stretch; padding:10px 20px 18px; display:none; gap:2px;
+  }
+  .nav-links.open{ display:flex; }
+  .nav-toggle{ display:flex; }
+  .nav-cta .btn-ghost{ display:none; }
+  .grid-3{ grid-template-columns:1fr; }
+  .grid-4{ grid-template-columns:1fr 1fr; }
+  .wrap{ padding:0 20px; }
+}
+
+</style>
+<style>
+  .upload-zone{
+    border:2.5px dashed var(--court-blue); border-radius:var(--radius-lg); background:#fff;
+    padding:56px 32px; text-align:center; transition:background .18s ease, border-color .18s ease;
+    cursor:pointer;
+  }
+  .upload-zone.dragover{ background:rgba(46,95,163,0.06); border-color:var(--court-green); }
+  .upload-zone .icon-circle{
+    width:70px; height:70px; border-radius:50%; margin:0 auto 18px;
+    background:linear-gradient(135deg, var(--court-blue), var(--court-green)); display:flex; align-items:center; justify-content:center;
+    font-size:1.8rem; color:#fff;
+  }
+  .upload-zone h3{ font-size:1.2rem; }
+  .upload-zone p{ color:var(--ink-soft); margin-top:8px; font-size:0.9rem; }
+  .filetypes{ display:flex; gap:8px; justify-content:center; margin-top:16px; flex-wrap:wrap; }
+  #file-input{ display:none; }
+
+  .file-chosen{
+    display:none; align-items:center; gap:14px; background:#fff; border:1px solid var(--line); border-radius:var(--radius-md);
+    padding:16px 20px; margin-top:22px; box-shadow:var(--shadow-card);
+  }
+  .file-chosen .ficon{ width:44px; height:44px; border-radius:10px; background:var(--cloud); display:flex; align-items:center; justify-content:center; font-size:1.2rem;}
+  .file-chosen .fname{ font-weight:600; font-size:0.92rem; }
+  .file-chosen .fsize{ font-family:var(--font-mono); font-size:0.75rem; color:var(--ink-soft); }
+  .file-chosen .remove-btn{ margin-left:auto; background:none; border:none; color:var(--ink-soft); font-size:1.1rem; }
+
+  .process-panel{ display:none; margin-top:26px; background:var(--ink); border-radius:var(--radius-lg); padding:32px; color:#fff; }
+  .progress-track{ height:8px; border-radius:8px; background:rgba(255,255,255,0.14); overflow:hidden; margin:18px 0 20px; }
+  .progress-fill{ height:100%; width:0%; background:linear-gradient(90deg, var(--sunlight), var(--court-green)); transition:width .4s ease; }
+  .step-list{ display:flex; flex-direction:column; gap:12px; }
+  .step-item{ display:flex; align-items:center; gap:12px; font-size:0.9rem; color:rgba(255,255,255,0.45); font-family:var(--font-mono); }
+  .step-item .dot{ width:10px; height:10px; border-radius:50%; border:2px solid rgba(255,255,255,0.3); flex-shrink:0; }
+  .step-item.active{ color:#fff; }
+  .step-item.active .dot{ background:var(--sunlight); border-color:var(--sunlight); box-shadow:0 0 0 4px rgba(216,232,91,0.25); }
+  .step-item.done{ color:rgba(255,255,255,0.75); }
+  .step-item.done .dot{ background:var(--court-green); border-color:var(--court-green); }
+
+  .done-panel{ display:none; text-align:center; margin-top:26px; background:#fff; border:1px solid var(--line); border-radius:var(--radius-lg); padding:44px 24px; }
+  .done-panel .check{
+    width:64px; height:64px; border-radius:50%; background:var(--court-green); color:#fff; font-size:1.8rem;
+    display:flex; align-items:center; justify-content:center; margin:0 auto 18px;
+  }
+  .tips-card{ padding:22px; border-radius:var(--radius-md); background:var(--cloud); border:1px solid var(--line); }
+  .tips-card li{ display:flex; gap:10px; font-size:0.88rem; color:var(--ink-soft); margin-bottom:12px; line-height:1.5; }
+  .tips-card li:last-child{ margin-bottom:0; }
+</style>
+</head>
+<body data-page="upload">
+
+<nav class="site-nav" id="ace-nav"></nav>
+
+<header class="page-hero">
+  <div class="wrap">
+    <span class="eyebrow">Step 1 of 3</span>
+    <h1>Upload a match</h1>
+    <p>Drop in raw footage from a phone, GoPro, or court-side camera. Ace handles player detection, ball tracking, and stroke classification from a single file.</p>
+  </div>
+</header>
+
+<section class="section">
+  <div class="wrap grid-2" style="align-items:flex-start;">
+
+    <div>
+      <div class="upload-zone" id="upload-zone">
+        <div class="icon-circle">📂</div>
+        <h3>Drag &amp; drop your match video</h3>
+        <p>or click to browse your files</p>
+        <div class="filetypes">
+          <span class="tag blue">MP4</span>
+          <span class="tag blue">AVI</span>
+          <span class="tag blue">MOV</span>
+        </div>
+        <input type="file" id="file-input" accept="video/*">
+      </div>
+
+      <div class="file-chosen" id="file-chosen">
+        <div class="ficon">🎬</div>
+        <div>
+          <div class="fname" id="fname">match_footage.mp4</div>
+          <div class="fsize" id="fsize">— MB</div>
+        </div>
+        <button class="remove-btn" id="remove-file" title="Remove file">✕</button>
+      </div>
+
+      <button class="btn btn-primary btn-block" id="analyze-btn" style="margin-top:22px;" disabled>Analyze match</button>
+
+      <div class="process-panel" id="process-panel">
+        <div class="eyebrow" style="color:var(--sunlight-soft);">Processing</div>
+        <h3 style="color:#fff; margin-top:8px; font-size:1.15rem;">Running the Ace pipeline…</h3>
+        <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="step-list" id="step-list">
+          <div class="step-item" data-step="0"><span class="dot"></span> Reading video &amp; extracting frames</div>
+          <div class="step-item" data-step="1"><span class="dot"></span> Detecting players</div>
+          <div class="step-item" data-step="2"><span class="dot"></span> Tracking ball trajectory</div>
+          <div class="step-item" data-step="3"><span class="dot"></span> Classifying strokes</div>
+          <div class="step-item" data-step="4"><span class="dot"></span> Running physics-based motion model</div>
+          <div class="step-item" data-step="5"><span class="dot"></span> Generating analytics &amp; coaching insights</div>
+        </div>
+      </div>
+
+      <div class="done-panel" id="done-panel">
+        <div class="check">✓</div>
+        <h3 style="font-size:1.3rem;">Analysis complete</h3>
+        <p style="color:var(--ink-soft); margin-top:8px; font-size:0.92rem;">Ace processed 1,842 frames, tracked 2 players, and classified 63 strokes.</p>
+        <div style="display:flex; gap:12px; justify-content:center; margin-top:22px; flex-wrap:wrap;">
+          <a href="dashboard.html" class="btn btn-primary">View analytics dashboard</a>
+          <a href="playback.html" class="btn btn-ghost">Watch tracked playback</a>
+        </div>
+      </div>
+    </div>
+
+    <aside class="tips-card">
+      <h4 style="font-family:var(--font-mono); font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:14px;">For the best results</h4>
+      <ul>
+        <li>📐 <span>Film from an elevated, side-on angle that keeps the full court in frame.</span></li>
+        <li>💡 <span>Even, consistent lighting improves player and ball detection accuracy.</span></li>
+        <li>🎯 <span>Keep the camera as still as possible — a tripod works best.</span></li>
+        <li>⏱️ <span>Full rallies (serve to point end) give the tactical model more to work with.</span></li>
+        <li>📦 <span>Files up to 2GB are supported for this demo pipeline.</span></li>
+      </ul>
+    </aside>
+
+  </div>
+</section>
+
+<footer class="site-footer" id="ace-footer"></footer>
+
+<script>
+/* ============================================================
+   ACE — shared site behaviour
+   - injects nav + footer on every page (single source of truth)
+   - lightweight mock-auth using localStorage (front-end only demo)
+   - mobile nav toggle
+   ============================================================ */
+
+const ACE_NAV_LINKS = [
+  { href: "index.html",     label: "🏠 Home" },
+  { href: "upload.html",    label: "📂 Upload" },
+  { href: "playback.html",  label: "📹 Playback" },
+  { href: "dashboard.html", label: "📊 Dashboard" },
+  { href: "player.html",    label: "🎯 Players" },
+  { href: "insights.html",  label: "🤖 Insights" },
+  { href: "report.html",    label: "📄 Report" },
+];
+
+function aceCurrentUser(){
+  try{ return JSON.parse(localStorage.getItem("ace_current_user") || "null"); }
+  catch(e){ return null; }
+}
+
+function aceRenderNav(){
+  const mount = document.getElementById("ace-nav");
+  if(!mount) return;
+  const here = (document.body.getAttribute("data-page") || "");
+  const user = aceCurrentUser();
+
+  const links = ACE_NAV_LINKS.map(l => {
+    const active = l.href.replace(".html","") === here ? " active" : "";
+    return `<a href="${l.href}" class="${active.trim()}">${l.label}</a>`;
+  }).join("");
+
+  const ctaHtml = user
+    ? `<span class="nav-user" style="display:inline-flex"><span>👋 ${user.name.split(" ")[0]}</span></span>
+       <button class="btn btn-ghost btn-sm" id="ace-logout-btn">Sign out</button>`
+    : `<a href="signin.html" class="btn btn-ghost btn-sm">Sign in</a>
+       <a href="signup.html" class="btn btn-primary btn-sm">Get started</a>`;
+
+  mount.innerHTML = `
+    <div class="nav-inner">
+      <a href="index.html" class="brand">Ace</a>
+      <button class="nav-toggle" id="ace-nav-toggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="nav-links" id="ace-nav-links">${links}</div>
+      <div class="nav-cta">${ctaHtml}</div>
+    </div>
+  `;
+
+  document.getElementById("ace-nav-toggle").addEventListener("click", () => {
+    document.getElementById("ace-nav-links").classList.toggle("open");
+  });
+
+  const logoutBtn = document.getElementById("ace-logout-btn");
+  if(logoutBtn){
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("ace_current_user");
+      window.location.href = "index.html";
+    });
+  }
+}
+
+function aceRenderFooter(){
+  const mount = document.getElementById("ace-footer");
+  if(!mount) return;
+  mount.innerHTML = `
+    <div class="wrap footer-grid">
+      <div>
+        <div class="footer-brand">Ace</div>
+        <p style="margin-top:14px; font-size:0.88rem; line-height:1.7; color:rgba(255,255,255,0.65); max-width:280px;">
+          Computer vision, biomechanics and physics-based motion modeling for pickleball —
+          built as a research-grade coaching engine.
+        </p>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <a href="upload.html">Upload Analysis</a>
+        <a href="playback.html">Match Playback</a>
+        <a href="dashboard.html">Analytics Dashboard</a>
+        <a href="insights.html">AI Insights</a>
+      </div>
+      <div>
+        <h4>Account</h4>
+        <a href="player.html">Player Performance</a>
+        <a href="report.html">Reports</a>
+        <a href="signin.html">Sign in</a>
+        <a href="signup.html">Create account</a>
+      </div>
+      <div>
+        <h4>Research</h4>
+        <a href="#">Pose Estimation Model</a>
+        <a href="#">Stroke Classifier</a>
+        <a href="#">Physics Engine</a>
+        <a href="#">Publications</a>
+      </div>
+    </div>
+    <div class="wrap footer-bottom">
+      <span>© 2026 Ace Pickleball Intelligence — student research build</span>
+      <span>Built with computer vision + deep learning</span>
+    </div>
+  `;
+}
+
+function aceGuardPage(){
+  // pages that require a signed-in session for the "real product" feel
+  const guarded = ["dashboard","player","upload","playback","insights","report"];
+  const page = document.body.getAttribute("data-page");
+  if(guarded.includes(page) && !aceCurrentUser()){
+    const banner = document.createElement("div");
+    banner.style.cssText = "background:#fff4d6;border-bottom:1px solid #eadfa9;color:#6b5a1a;font-family:var(--font-mono);font-size:0.8rem;text-align:center;padding:10px 16px;";
+    banner.innerHTML = `You're viewing a demo session. <a href="signin.html" style="color:#2E5FA3;font-weight:700;">Sign in</a> to save real matches to your account.`;
+    document.body.insertBefore(banner, document.body.firstChild);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  aceRenderNav();
+  aceRenderFooter();
+  aceGuardPage();
+});
+
+</script>
+<script>
+  const zone = document.getElementById('upload-zone');
+  const input = document.getElementById('file-input');
+  const chosen = document.getElementById('file-chosen');
+  const fname = document.getElementById('fname');
+  const fsize = document.getElementById('fsize');
+  const removeBtn = document.getElementById('remove-file');
+  const analyzeBtn = document.getElementById('analyze-btn');
+  const processPanel = document.getElementById('process-panel');
+  const donePanel = document.getElementById('done-panel');
+  const progressFill = document.getElementById('progress-fill');
+  const steps = document.querySelectorAll('.step-item');
+
+  zone.addEventListener('click', () => input.click());
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('dragover');
+    if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+  input.addEventListener('change', () => { if(input.files.length) handleFile(input.files[0]); });
+
+  function handleFile(file){
+    fname.textContent = file.name;
+    fsize.textContent = (file.size / (1024*1024)).toFixed(1) + ' MB';
+    chosen.style.display = 'flex';
+    analyzeBtn.disabled = false;
+    donePanel.style.display = 'none';
+    processPanel.style.display = 'none';
+  }
+
+  removeBtn.addEventListener('click', () => {
+    input.value = '';
+    chosen.style.display = 'none';
+    analyzeBtn.disabled = true;
+  });
+
+  analyzeBtn.addEventListener('click', () => {
+    analyzeBtn.disabled = true;
+    processPanel.style.display = 'block';
+    donePanel.style.display = 'none';
+    steps.forEach(s => s.classList.remove('active','done'));
+    progressFill.style.width = '0%';
+
+    let i = 0;
+    const total = steps.length;
+    function nextStep(){
+      if(i > 0) steps[i-1].classList.replace('active','done');
+      if(i < total){
+        steps[i].classList.add('active');
+        progressFill.style.width = Math.round(((i+1)/total)*100) + '%';
+        i++;
+        setTimeout(nextStep, 750);
+      } else {
+        processPanel.style.display = 'none';
+        donePanel.style.display = 'block';
+        donePanel.scrollIntoView({ behavior:'smooth', block:'center' });
+      }
+    }
+    nextStep();
+  });
+</script>
+</body>
+</html>

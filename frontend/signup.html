@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create your account — Ace</title>
+<style>
+/* ============================================================
+   ACE — AI Pickleball Analytics
+   Design tokens grounded in the sport itself: the court's own
+   blue-play-area / green-out-of-bounds palette, a sky-to-court
+   gradient, and a cloud-band motif borrowed from the reference
+   collage, reinterpreted around a motion-tracked player.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Poppins:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+:root{
+  /* --- color tokens --- */
+  --sky-top:      #6FA8D8;
+  --sky-mid:      #4A86C8;
+  --court-blue:   #2E5FA3;
+  --court-blue-deep: #17335C;
+  --court-green:  #3C8654;
+  --court-green-deep: #245334;
+  --sunlight:     #D8E85B;
+  --sunlight-soft:#EAF29B;
+  --chalk:        #F7F5EF;
+  --cloud:        #EDEFE4;
+  --ink:          #14203A;
+  --ink-soft:     #4A5670;
+  --line:         rgba(20,32,58,0.10);
+
+  /* --- type tokens --- */
+  --font-script: 'Dancing Script', cursive;
+  --font-display:'Playfair Display', serif;
+  --font-body:   'Poppins', sans-serif;
+  --font-mono:   'Space Mono', monospace;
+
+  --radius-sm: 10px;
+  --radius-md: 18px;
+  --radius-lg: 28px;
+  --shadow-soft: 0 20px 60px -20px rgba(20,32,58,0.25);
+  --shadow-card: 0 10px 30px -12px rgba(20,32,58,0.18);
+}
+
+*{ box-sizing:border-box; }
+html{ scroll-behavior:smooth; }
+body{
+  margin:0;
+  font-family:var(--font-body);
+  color:var(--ink);
+  background:var(--chalk);
+  -webkit-font-smoothing:antialiased;
+}
+img,svg{ display:block; max-width:100%; }
+a{ color:inherit; text-decoration:none; }
+button{ font-family:inherit; cursor:pointer; }
+ul{ margin:0; padding:0; list-style:none; }
+h1,h2,h3,h4{ font-family:var(--font-display); margin:0; line-height:1.15; font-weight:600; }
+p{ margin:0; }
+
+:focus-visible{
+  outline:3px solid var(--sunlight);
+  outline-offset:3px;
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important; }
+}
+
+.eyebrow{
+  font-family:var(--font-mono);
+  font-size:0.72rem;
+  letter-spacing:0.16em;
+  text-transform:uppercase;
+  color:var(--court-blue);
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+.eyebrow::before{
+  content:"";
+  width:16px; height:2px;
+  background:var(--sunlight);
+  display:inline-block;
+}
+
+.wrap{
+  max-width:1200px;
+  margin:0 auto;
+  padding:0 32px;
+}
+
+/* ---------------- NAV ---------------- */
+.site-nav{
+  position:sticky; top:0; z-index:200;
+  background:rgba(247,245,239,0.86);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);
+}
+.nav-inner{
+  max-width:1200px; margin:0 auto; padding:14px 32px;
+  display:flex; align-items:center; justify-content:space-between; gap:24px;
+}
+.brand{
+  font-family:var(--font-script);
+  font-size:2rem;
+  font-weight:700;
+  background:linear-gradient(100deg, var(--court-blue) 10%, var(--court-green) 55%, var(--sunlight) 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  letter-spacing:0.5px;
+}
+.nav-links{
+  display:flex; align-items:center; gap:4px; flex-wrap:wrap;
+}
+.nav-links a{
+  font-size:0.86rem; font-weight:500; padding:9px 14px; border-radius:999px;
+  color:var(--ink-soft); transition:background .18s ease, color .18s ease;
+  display:inline-flex; align-items:center; gap:6px;
+}
+.nav-links a:hover{ background:var(--cloud); color:var(--ink); }
+.nav-links a.active{ background:var(--court-blue); color:#fff; }
+.nav-cta{ display:flex; align-items:center; gap:10px; }
+.nav-user{
+  font-family:var(--font-mono); font-size:0.75rem; color:var(--ink-soft);
+  display:none; align-items:center; gap:8px; padding:6px 12px; border:1px solid var(--line); border-radius:999px;
+}
+.nav-toggle{
+  display:none; flex-direction:column; gap:5px; background:none; border:none; padding:6px;
+}
+.nav-toggle span{ width:22px; height:2px; background:var(--ink); display:block; }
+
+/* ---------------- BUTTONS ---------------- */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  font-weight:600; font-size:0.92rem; padding:13px 26px; border-radius:999px;
+  border:1px solid transparent; transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
+  white-space:nowrap;
+}
+.btn:active{ transform:scale(0.97); }
+.btn-primary{
+  background:linear-gradient(120deg, var(--court-blue), var(--court-green));
+  color:#fff; box-shadow:0 10px 24px -8px rgba(46,95,163,0.55);
+}
+.btn-primary:hover{ box-shadow:0 14px 30px -8px rgba(46,95,163,0.7); transform:translateY(-1px); }
+.btn-sun{
+  background:var(--sunlight); color:var(--court-blue-deep);
+  box-shadow:0 10px 24px -10px rgba(216,232,91,0.8);
+}
+.btn-sun:hover{ transform:translateY(-1px); box-shadow:0 14px 28px -10px rgba(216,232,91,0.95); }
+.btn-ghost{
+  background:transparent; border-color:var(--line); color:var(--ink);
+}
+.btn-ghost:hover{ background:var(--cloud); }
+.btn-outline-light{
+  background:rgba(255,255,255,0.12); border-color:rgba(255,255,255,0.5); color:#fff;
+}
+.btn-outline-light:hover{ background:rgba(255,255,255,0.22); }
+.btn-block{ width:100%; }
+.btn-sm{ padding:8px 16px; font-size:0.8rem; }
+.btn[disabled]{ opacity:0.5; cursor:not-allowed; transform:none !important; }
+
+/* ---------------- CLOUD DIVIDER ---------------- */
+.cloud-divider{ display:block; width:100%; line-height:0; }
+.cloud-divider svg{ width:100%; height:auto; display:block; }
+
+/* ---------------- CARDS / PANELS ---------------- */
+.panel{
+  background:#fff; border:1px solid var(--line); border-radius:var(--radius-md);
+  box-shadow:var(--shadow-card);
+}
+.stat-card{
+  background:#fff; border:1px solid var(--line); border-radius:var(--radius-md);
+  padding:22px 24px; box-shadow:var(--shadow-card);
+}
+.stat-card .label{
+  font-family:var(--font-mono); font-size:0.68rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-soft);
+}
+.stat-card .value{
+  font-family:var(--font-display); font-size:2.1rem; font-weight:700; margin-top:6px; color:var(--court-blue-deep);
+}
+.stat-card .delta{ font-family:var(--font-mono); font-size:0.75rem; margin-top:4px; }
+.delta.up{ color:var(--court-green-deep); }
+.delta.down{ color:#a3413a; }
+
+/* ---------------- FOOTER ---------------- */
+.site-footer{
+  background:var(--court-blue-deep); color:rgba(255,255,255,0.82);
+  padding:56px 0 28px; margin-top:100px;
+}
+.footer-grid{
+  display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:32px;
+}
+.footer-brand{
+  font-family:var(--font-script); font-size:2.1rem; color:var(--sunlight);
+}
+.footer-grid h4{ font-family:var(--font-mono); font-size:0.72rem; letter-spacing:0.12em; text-transform:uppercase; color:rgba(255,255,255,0.55); margin-bottom:14px; font-weight:600;}
+.footer-grid a{ display:block; font-size:0.88rem; padding:6px 0; color:rgba(255,255,255,0.85); }
+.footer-grid a:hover{ color:var(--sunlight); }
+.footer-bottom{
+  border-top:1px solid rgba(255,255,255,0.14); margin-top:40px; padding-top:20px;
+  display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; color:rgba(255,255,255,0.5);
+  font-family:var(--font-mono);
+}
+
+/* ---------------- PAGE HERO (inner pages) ---------------- */
+.page-hero{
+  background:linear-gradient(160deg, var(--court-blue-deep), var(--court-blue) 60%, var(--court-green) 130%);
+  color:#fff; padding:64px 0 46px;
+}
+.page-hero .eyebrow{ color:var(--sunlight-soft); }
+.page-hero .eyebrow::before{ background:var(--sunlight); }
+.page-hero h1{ color:#fff; font-size:clamp(2rem, 4vw, 2.8rem); margin-top:10px; }
+.page-hero p{ color:rgba(255,255,255,0.82); max-width:620px; margin-top:14px; font-size:1.02rem; line-height:1.6; }
+
+.section{ padding:64px 0; }
+.section-head{ margin-bottom:34px; max-width:640px; }
+.section-head h2{ font-size:clamp(1.5rem,3vw,2.1rem); margin-top:10px; }
+.section-head p{ color:var(--ink-soft); margin-top:12px; line-height:1.6; }
+
+/* ---------------- FORM ELEMENTS ---------------- */
+.field{ margin-bottom:18px; }
+.field label{
+  display:block; font-family:var(--font-mono); font-size:0.72rem; letter-spacing:0.08em;
+  text-transform:uppercase; color:var(--ink-soft); margin-bottom:8px;
+}
+.field input, .field select, .field textarea{
+  width:100%; padding:13px 16px; border-radius:var(--radius-sm); border:1.5px solid var(--line);
+  font-family:var(--font-body); font-size:0.95rem; background:#fff; color:var(--ink);
+  transition:border-color .15s ease, box-shadow .15s ease;
+}
+.field input:focus, .field select:focus, .field textarea:focus{
+  border-color:var(--court-blue); box-shadow:0 0 0 4px rgba(46,95,163,0.12); outline:none;
+}
+.field-error{ font-size:0.78rem; color:#b1453d; margin-top:6px; display:none; font-family:var(--font-mono); }
+.field.invalid input{ border-color:#b1453d; }
+.field.invalid .field-error{ display:block; }
+.password-wrap{ position:relative; }
+.password-toggle{
+  position:absolute; right:12px; top:50%; transform:translateY(-50%);
+  background:none; border:none; font-family:var(--font-mono); font-size:0.7rem; color:var(--ink-soft);
+  letter-spacing:0.05em; text-transform:uppercase;
+}
+.password-toggle:hover{ color:var(--court-blue); }
+.strength-meter{ height:4px; border-radius:4px; background:var(--line); margin-top:8px; overflow:hidden; }
+.strength-meter span{ display:block; height:100%; width:0%; background:#b1453d; transition:width .2s ease, background .2s ease; }
+
+.method-switch{
+  display:flex; background:var(--cloud); border-radius:999px; padding:4px; margin-bottom:22px;
+}
+.method-switch button{
+  flex:1; border:none; background:none; padding:10px; border-radius:999px; font-size:0.85rem; font-weight:600; color:var(--ink-soft);
+  transition:background .18s ease, color .18s ease;
+}
+.method-switch button.active{ background:#fff; color:var(--court-blue-deep); box-shadow:var(--shadow-card); }
+
+.checkbox-row{ display:flex; align-items:center; gap:8px; font-size:0.84rem; color:var(--ink-soft); }
+
+/* ---------------- SKELETON / MOTION FIGURE ---------------- */
+.motion-figure line, .motion-figure circle{
+  stroke:var(--sunlight); stroke-width:2.4; fill:none; stroke-linecap:round;
+}
+.motion-figure circle{ fill:var(--sunlight); stroke:none; }
+.motion-trail{ stroke:rgba(216,232,91,0.55); stroke-width:2; fill:none; stroke-dasharray:6 8; }
+
+/* ---------------- UTILS ---------------- */
+.grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:28px; }
+.grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+.grid-4{ display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
+.tag{
+  font-family:var(--font-mono); font-size:0.68rem; letter-spacing:0.08em; text-transform:uppercase;
+  padding:5px 10px; border-radius:999px; background:var(--cloud); color:var(--ink-soft); display:inline-block;
+}
+.tag.blue{ background:rgba(46,95,163,0.12); color:var(--court-blue); }
+.tag.green{ background:rgba(60,134,84,0.12); color:var(--court-green-deep); }
+.tag.sun{ background:rgba(216,232,91,0.28); color:#6b6f1a; }
+.divider-line{ height:1px; background:var(--line); border:none; margin:0; }
+
+.auth-shell{
+  min-height:calc(100vh - 72px);
+  display:grid; grid-template-columns:1fr 1fr;
+}
+.auth-visual{
+  background:linear-gradient(165deg, var(--sky-top), var(--court-blue) 55%, var(--court-green) 130%);
+  position:relative; overflow:hidden; display:flex; align-items:flex-end; padding:48px;
+}
+.auth-visual .quote{ color:#fff; position:relative; z-index:2; }
+.auth-visual .quote .script{ font-family:var(--font-script); font-size:2.4rem; color:var(--sunlight-soft); display:block; }
+.auth-form-side{ display:flex; align-items:center; justify-content:center; padding:48px 32px; }
+.auth-card{ width:100%; max-width:420px; }
+
+/* ---------------- RESPONSIVE ---------------- */
+@media (max-width: 980px){
+  .grid-2{ grid-template-columns:1fr; }
+  .grid-3{ grid-template-columns:1fr 1fr; }
+  .grid-4{ grid-template-columns:1fr 1fr; }
+  .footer-grid{ grid-template-columns:1fr 1fr; }
+  .auth-shell{ grid-template-columns:1fr; }
+  .auth-visual{ display:none; }
+}
+@media (max-width: 760px){
+  .nav-links{
+    position:absolute; top:100%; left:0; right:0; background:var(--chalk); border-bottom:1px solid var(--line);
+    flex-direction:column; align-items:stretch; padding:10px 20px 18px; display:none; gap:2px;
+  }
+  .nav-links.open{ display:flex; }
+  .nav-toggle{ display:flex; }
+  .nav-cta .btn-ghost{ display:none; }
+  .grid-3{ grid-template-columns:1fr; }
+  .grid-4{ grid-template-columns:1fr 1fr; }
+  .wrap{ padding:0 20px; }
+}
+
+</style>
+<style>
+  .auth-visual::after{
+    content:""; position:absolute; inset:auto -10% -30% -10%; height:60%;
+    background:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 200"><path fill="%23F7F5EF" d="M0,120 C150,60 260,150 400,110 C540,60 620,150 760,110 C900,60 1000,150 1160,110 C1300,80 1380,140 1440,120 L1440,200 L0,200 Z"/></svg>') no-repeat bottom / cover;
+  }
+  .auth-visual .badge-row{ position:absolute; top:34px; left:40px; display:flex; gap:10px; z-index:2; }
+  .success-box{ display:none; text-align:center; padding:30px 10px; }
+  .success-box .check{
+    width:64px; height:64px; border-radius:50%; background:var(--sunlight); color:var(--court-blue-deep);
+    display:flex; align-items:center; justify-content:center; font-size:1.8rem; margin:0 auto 18px;
+  }
+</style>
+</head>
+<body data-page="signup">
+
+<nav class="site-nav" id="ace-nav"></nav>
+
+<div class="auth-shell">
+  <div class="auth-visual">
+    <div class="badge-row">
+      <span class="tag" style="background:rgba(255,255,255,0.18); color:#fff;">🎾 Player-first</span>
+      <span class="tag" style="background:rgba(255,255,255,0.18); color:#fff;">🔒 Your data, your matches</span>
+    </div>
+    <div class="quote">
+      <span class="script">Every rally, understood.</span>
+      <p style="max-width:360px; margin-top:12px; color:rgba(255,255,255,0.85); font-size:0.95rem; line-height:1.7;">
+        Create an account to save match uploads, track player performance over time, and download coaching reports.
+      </p>
+    </div>
+  </div>
+
+  <div class="auth-form-side">
+    <div class="auth-card">
+      <span class="eyebrow">Get started</span>
+      <h1 style="margin-top:10px; font-size:1.9rem;">Create your account</h1>
+      <p style="color:var(--ink-soft); margin-top:8px; font-size:0.92rem;">Already have one? <a href="signin.html" style="color:var(--court-blue); font-weight:600;">Sign in</a></p>
+
+      <form id="signup-form" novalidate style="margin-top:28px;">
+        <div class="field" id="field-name">
+          <label for="signup-name">Full name</label>
+          <input type="text" id="signup-name" placeholder="Alex Rivera" autocomplete="name">
+          <div class="field-error">Enter your full name.</div>
+        </div>
+
+        <div class="method-switch" id="signup-method-switch">
+          <button type="button" class="active" data-method="email">Sign up with email</button>
+          <button type="button" data-method="phone">Sign up with phone</button>
+        </div>
+
+        <div class="field" id="field-email" data-method-field="email">
+          <label for="signup-email">Email address</label>
+          <input type="email" id="signup-email" placeholder="you@example.com" autocomplete="email">
+          <div class="field-error">Enter a valid email address.</div>
+        </div>
+
+        <div class="field" id="field-phone" data-method-field="phone" style="display:none;">
+          <label for="signup-phone">Phone number</label>
+          <input type="tel" id="signup-phone" placeholder="+1 555 123 4567" autocomplete="tel">
+          <div class="field-error">Enter a valid phone number.</div>
+        </div>
+
+        <div class="field" id="field-password">
+          <label for="signup-password">Password</label>
+          <div class="password-wrap">
+            <input type="password" id="signup-password" placeholder="At least 8 characters" autocomplete="new-password">
+            <button type="button" class="password-toggle" data-target="signup-password">Show</button>
+          </div>
+          <div class="strength-meter"><span></span></div>
+          <div class="field-error">Use at least 8 characters.</div>
+        </div>
+
+        <div class="field" id="field-confirm">
+          <label for="signup-confirm">Confirm password</label>
+          <div class="password-wrap">
+            <input type="password" id="signup-confirm" placeholder="Re-enter your password" autocomplete="new-password">
+            <button type="button" class="password-toggle" data-target="signup-confirm">Show</button>
+          </div>
+          <div class="field-error">Passwords don't match.</div>
+        </div>
+
+        <div class="checkbox-row" style="margin-bottom:8px;">
+          <input type="checkbox" id="signup-terms">
+          <label for="signup-terms" style="margin:0; text-transform:none; font-family:var(--font-body); font-size:0.84rem;">I agree to the Terms and Privacy Policy</label>
+        </div>
+        <div class="field-error" id="terms-msg" style="display:none; margin-bottom:14px;">Please accept the terms to continue.</div>
+
+        <button type="submit" class="btn btn-primary btn-block" style="margin-top:6px;">Create account</button>
+      </form>
+
+      <div class="success-box" id="signup-success">
+        <div class="check">✓</div>
+        <h3 style="font-size:1.2rem;">Account created</h3>
+        <p style="color:var(--ink-soft); margin-top:8px; font-size:0.9rem;">Redirecting you to your dashboard…</p>
+      </div>
+
+      <p style="text-align:center; color:var(--ink-soft); font-size:0.8rem; margin-top:22px;">This is a front-end demo — accounts are stored only in your browser.</p>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer" id="ace-footer"></footer>
+
+<script>
+/* ============================================================
+   ACE — shared site behaviour
+   - injects nav + footer on every page (single source of truth)
+   - lightweight mock-auth using localStorage (front-end only demo)
+   - mobile nav toggle
+   ============================================================ */
+
+const ACE_NAV_LINKS = [
+  { href: "index.html",     label: "🏠 Home" },
+  { href: "upload.html",    label: "📂 Upload" },
+  { href: "playback.html",  label: "📹 Playback" },
+  { href: "dashboard.html", label: "📊 Dashboard" },
+  { href: "player.html",    label: "🎯 Players" },
+  { href: "insights.html",  label: "🤖 Insights" },
+  { href: "report.html",    label: "📄 Report" },
+];
+
+function aceCurrentUser(){
+  try{ return JSON.parse(localStorage.getItem("ace_current_user") || "null"); }
+  catch(e){ return null; }
+}
+
+function aceRenderNav(){
+  const mount = document.getElementById("ace-nav");
+  if(!mount) return;
+  const here = (document.body.getAttribute("data-page") || "");
+  const user = aceCurrentUser();
+
+  const links = ACE_NAV_LINKS.map(l => {
+    const active = l.href.replace(".html","") === here ? " active" : "";
+    return `<a href="${l.href}" class="${active.trim()}">${l.label}</a>`;
+  }).join("");
+
+  const ctaHtml = user
+    ? `<span class="nav-user" style="display:inline-flex"><span>👋 ${user.name.split(" ")[0]}</span></span>
+       <button class="btn btn-ghost btn-sm" id="ace-logout-btn">Sign out</button>`
+    : `<a href="signin.html" class="btn btn-ghost btn-sm">Sign in</a>
+       <a href="signup.html" class="btn btn-primary btn-sm">Get started</a>`;
+
+  mount.innerHTML = `
+    <div class="nav-inner">
+      <a href="index.html" class="brand">Ace</a>
+      <button class="nav-toggle" id="ace-nav-toggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="nav-links" id="ace-nav-links">${links}</div>
+      <div class="nav-cta">${ctaHtml}</div>
+    </div>
+  `;
+
+  document.getElementById("ace-nav-toggle").addEventListener("click", () => {
+    document.getElementById("ace-nav-links").classList.toggle("open");
+  });
+
+  const logoutBtn = document.getElementById("ace-logout-btn");
+  if(logoutBtn){
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("ace_current_user");
+      window.location.href = "index.html";
+    });
+  }
+}
+
+function aceRenderFooter(){
+  const mount = document.getElementById("ace-footer");
+  if(!mount) return;
+  mount.innerHTML = `
+    <div class="wrap footer-grid">
+      <div>
+        <div class="footer-brand">Ace</div>
+        <p style="margin-top:14px; font-size:0.88rem; line-height:1.7; color:rgba(255,255,255,0.65); max-width:280px;">
+          Computer vision, biomechanics and physics-based motion modeling for pickleball —
+          built as a research-grade coaching engine.
+        </p>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <a href="upload.html">Upload Analysis</a>
+        <a href="playback.html">Match Playback</a>
+        <a href="dashboard.html">Analytics Dashboard</a>
+        <a href="insights.html">AI Insights</a>
+      </div>
+      <div>
+        <h4>Account</h4>
+        <a href="player.html">Player Performance</a>
+        <a href="report.html">Reports</a>
+        <a href="signin.html">Sign in</a>
+        <a href="signup.html">Create account</a>
+      </div>
+      <div>
+        <h4>Research</h4>
+        <a href="#">Pose Estimation Model</a>
+        <a href="#">Stroke Classifier</a>
+        <a href="#">Physics Engine</a>
+        <a href="#">Publications</a>
+      </div>
+    </div>
+    <div class="wrap footer-bottom">
+      <span>© 2026 Ace Pickleball Intelligence — student research build</span>
+      <span>Built with computer vision + deep learning</span>
+    </div>
+  `;
+}
+
+function aceGuardPage(){
+  // pages that require a signed-in session for the "real product" feel
+  const guarded = ["dashboard","player","upload","playback","insights","report"];
+  const page = document.body.getAttribute("data-page");
+  if(guarded.includes(page) && !aceCurrentUser()){
+    const banner = document.createElement("div");
+    banner.style.cssText = "background:#fff4d6;border-bottom:1px solid #eadfa9;color:#6b5a1a;font-family:var(--font-mono);font-size:0.8rem;text-align:center;padding:10px 16px;";
+    banner.innerHTML = `You're viewing a demo session. <a href="signin.html" style="color:#2E5FA3;font-weight:700;">Sign in</a> to save real matches to your account.`;
+    document.body.insertBefore(banner, document.body.firstChild);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  aceRenderNav();
+  aceRenderFooter();
+  aceGuardPage();
+});
+
+</script>
+<script>
+/* ============================================================
+   ACE — mock authentication
+   Front-end only demo: "users" persist in localStorage so sign up
+   → sign in actually works across page loads, without a server.
+   ============================================================ */
+
+function aceGetUsers(){
+  try{ return JSON.parse(localStorage.getItem("ace_users") || "[]"); }
+  catch(e){ return []; }
+}
+function aceSaveUsers(users){
+  localStorage.setItem("ace_users", JSON.stringify(users));
+}
+function aceSetSession(user){
+  localStorage.setItem("ace_current_user", JSON.stringify({ name:user.name, id:user.id }));
+}
+
+function aceSwitchMethod(container, method){
+  container.querySelectorAll(".method-switch button").forEach(b => b.classList.toggle("active", b.dataset.method === method));
+  container.querySelectorAll("[data-method-field]").forEach(f => {
+    f.style.display = f.dataset.methodField === method ? "block" : "none";
+  });
+}
+
+function aceValidateEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+function aceValidatePhone(v){ return /^\+?[0-9\s\-()]{7,15}$/.test(v); }
+
+function aceShowError(field, msg){
+  field.classList.add("invalid");
+  const err = field.querySelector(".field-error");
+  if(err) err.textContent = msg;
+}
+function aceClearError(field){
+  field.classList.remove("invalid");
+}
+
+function aceScorePassword(pw){
+  let score = 0;
+  if(pw.length >= 8) score++;
+  if(/[A-Z]/.test(pw)) score++;
+  if(/[0-9]/.test(pw)) score++;
+  if(/[^A-Za-z0-9]/.test(pw)) score++;
+  return score; // 0-4
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  /* -------- password show/hide (both pages) -------- */
+  document.querySelectorAll(".password-toggle").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const input = document.getElementById(btn.dataset.target);
+      const isPw = input.type === "password";
+      input.type = isPw ? "text" : "password";
+      btn.textContent = isPw ? "Hide" : "Show";
+    });
+  });
+
+  /* -------- signup method switch -------- */
+  const signupSwitch = document.getElementById("signup-method-switch");
+  if(signupSwitch){
+    signupSwitch.querySelectorAll("button").forEach(b => {
+      b.addEventListener("click", () => aceSwitchMethod(document.getElementById("signup-form"), b.dataset.method));
+    });
+  }
+  const signinSwitch = document.getElementById("signin-method-switch");
+  if(signinSwitch){
+    signinSwitch.querySelectorAll("button").forEach(b => {
+      b.addEventListener("click", () => aceSwitchMethod(document.getElementById("signin-form"), b.dataset.method));
+    });
+  }
+
+  /* -------- password strength meter -------- */
+  const pwInput = document.getElementById("signup-password");
+  if(pwInput){
+    pwInput.addEventListener("input", () => {
+      const meter = document.querySelector(".strength-meter span");
+      const score = aceScorePassword(pwInput.value);
+      const pct = [0, 25, 50, 75, 100][score];
+      const colors = ["#b1453d","#b1453d","#d9a441","#7fb04a","#3C8654"];
+      meter.style.width = pct + "%";
+      meter.style.background = colors[score];
+    });
+  }
+
+  /* -------- SIGN UP -------- */
+  const signupForm = document.getElementById("signup-form");
+  if(signupForm){
+    signupForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      let valid = true;
+
+      const nameField = document.getElementById("field-name");
+      const nameInput = document.getElementById("signup-name");
+      if(nameInput.value.trim().length < 2){ aceShowError(nameField, "Enter your full name."); valid = false; }
+      else aceClearError(nameField);
+
+      const method = signupForm.querySelector(".method-switch button.active").dataset.method;
+      let identifier = "";
+      if(method === "email"){
+        const f = document.getElementById("field-email");
+        const v = document.getElementById("signup-email").value.trim();
+        if(!aceValidateEmail(v)){ aceShowError(f, "Enter a valid email address."); valid = false; }
+        else { aceClearError(f); identifier = v.toLowerCase(); }
+      } else {
+        const f = document.getElementById("field-phone");
+        const v = document.getElementById("signup-phone").value.trim();
+        if(!aceValidatePhone(v)){ aceShowError(f, "Enter a valid phone number."); valid = false; }
+        else { aceClearError(f); identifier = v.replace(/\s+/g,""); }
+      }
+
+      const pwField = document.getElementById("field-password");
+      const pw = document.getElementById("signup-password").value;
+      if(pw.length < 8){ aceShowError(pwField, "Use at least 8 characters."); valid = false; }
+      else aceClearError(pwField);
+
+      const confirmField = document.getElementById("field-confirm");
+      const confirm = document.getElementById("signup-confirm").value;
+      if(confirm !== pw || confirm.length === 0){ aceShowError(confirmField, "Passwords don't match."); valid = false; }
+      else aceClearError(confirmField);
+
+      const termsBox = document.getElementById("signup-terms");
+      const termsMsg = document.getElementById("terms-msg");
+      if(!termsBox.checked){ termsMsg.style.display = "block"; valid = false; }
+      else termsMsg.style.display = "none";
+
+      if(!valid) return;
+
+      const users = aceGetUsers();
+      if(users.some(u => u.identifier === identifier)){
+        const f = method === "email" ? document.getElementById("field-email") : document.getElementById("field-phone");
+        aceShowError(f, "An account already exists for this " + method + ".");
+        return;
+      }
+
+      const newUser = {
+        id: "u_" + Date.now(),
+        name: nameInput.value.trim(),
+        method,
+        identifier,
+        password: pw, // demo only — never store plaintext passwords in a real product
+      };
+      users.push(newUser);
+      aceSaveUsers(users);
+      aceSetSession(newUser);
+
+      const successBox = document.getElementById("signup-success");
+      signupForm.style.display = "none";
+      successBox.style.display = "block";
+      setTimeout(() => { window.location.href = "dashboard.html"; }, 1400);
+    });
+  }
+
+  /* -------- SIGN IN -------- */
+  const signinForm = document.getElementById("signin-form");
+  if(signinForm){
+    signinForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      let valid = true;
+      const method = signinForm.querySelector(".method-switch button.active").dataset.method;
+
+      let identifier = "";
+      if(method === "email"){
+        const f = document.getElementById("field-signin-email");
+        const v = document.getElementById("signin-email").value.trim();
+        if(!aceValidateEmail(v)){ aceShowError(f, "Enter a valid email address."); valid = false; }
+        else { aceClearError(f); identifier = v.toLowerCase(); }
+      } else {
+        const f = document.getElementById("field-signin-phone");
+        const v = document.getElementById("signin-phone").value.trim();
+        if(!aceValidatePhone(v)){ aceShowError(f, "Enter a valid phone number."); valid = false; }
+        else { aceClearError(f); identifier = v.replace(/\s+/g,""); }
+      }
+
+      const pwField = document.getElementById("field-signin-password");
+      const pw = document.getElementById("signin-password").value;
+      if(pw.length === 0){ aceShowError(pwField, "Enter your password."); valid = false; }
+      else aceClearError(pwField);
+
+      if(!valid) return;
+
+      const users = aceGetUsers();
+      const match = users.find(u => u.identifier === identifier && u.password === pw);
+      const genericError = document.getElementById("signin-generic-error");
+
+      if(!match){
+        genericError.style.display = "block";
+        genericError.textContent = users.some(u => u.identifier === identifier)
+          ? "That password doesn't match this account."
+          : "No account found — try creating one instead.";
+        return;
+      }
+      genericError.style.display = "none";
+      aceSetSession(match);
+      window.location.href = "dashboard.html";
+    });
+  }
+
+  /* -------- demo account shortcut -------- */
+  const demoBtn = document.getElementById("use-demo-account");
+  if(demoBtn){
+    demoBtn.addEventListener("click", () => {
+      const users = aceGetUsers();
+      let demo = users.find(u => u.identifier === "demo@ace.gg");
+      if(!demo){
+        demo = { id:"u_demo", name:"Demo Player", method:"email", identifier:"demo@ace.gg", password:"demo1234" };
+        users.push(demo);
+        aceSaveUsers(users);
+      }
+      aceSetSession(demo);
+      window.location.href = "dashboard.html";
+    });
+  }
+});
+
+</script>
+</body>
+</html>
